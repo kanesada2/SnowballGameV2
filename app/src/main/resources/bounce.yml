@@ -1,0 +1,122 @@
+Type:
+  - Dampening # Soft blocks that absorb impact and reduce bounce significantly.
+  - Flat # Thin blocks that always calculate collision as hitting the top surface when placed horizontally.
+  - Passthrough # Blocks that the ball passes through without bouncing. Note: Some blocks have no collision in vanilla Minecraft. Use sparingly as this may cause unexpected behavior.
+# Repulsion: Bounce coefficient when the ball hits this block. Set to 0 for pass-through (no bounce). (Default: 1.0)
+# AlwaysTop: When true, collision is always calculated as hitting the top surface if the block is placed horizontally. (Default: false)
+# List: List of block materials that this configuration applies to.
+
+Dampening:
+  Repulsion: 0.1
+  List:
+    - IRON_BARS
+    - IRON_CHAIN
+    - VINE
+
+Flat:
+  AlwaysTop: true
+  List:
+    - ACTIVATOR_RAIL
+    - DETECTOR_RAIL
+    - POWERED_RAIL
+    - RAIL
+    - BLACK_CARPET
+    - BLUE_CARPET
+    - BROWN_CARPET
+    - CYAN_CARPET
+    - GRAY_CARPET
+    - GREEN_CARPET
+    - LIGHT_BLUE_CARPET
+    - LIGHT_GRAY_CARPET
+    - LIME_CARPET
+    - MAGENTA_CARPET
+    - MOSS_CARPET
+    - ORANGE_CARPET
+    - PALE_MOSS_CARPET
+    - PINK_CARPET
+    - PURPLE_CARPET
+    - RED_CARPET
+    - WHITE_CARPET
+    - YELLOW_CARPET
+    - HEAVY_WEIGHTED_PRESSURE_PLATE
+    - LIGHT_WEIGHTED_PRESSURE_PLATE
+    - ACACIA_PRESSURE_PLATE
+    - BAMBOO_PRESSURE_PLATE
+    - BIRCH_PRESSURE_PLATE
+    - CHERRY_PRESSURE_PLATE
+    - CRIMSON_PRESSURE_PLATE
+    - DARK_OAK_PRESSURE_PLATE
+    - JUNGLE_PRESSURE_PLATE
+    - MANGROVE_PRESSURE_PLATE
+    - OAK_PRESSURE_PLATE
+    - PALE_OAK_PRESSURE_PLATE
+    - POLISHED_BLACKSTONE_PRESSURE_PLATE
+    - SPRUCE_PRESSURE_PLATE
+    - STONE_PRESSURE_PLATE
+    - WARPED_PRESSURE_PLATE
+    - SNOW
+    - REDSTONE_WIRE
+    - COMPARATOR
+    - DAYLIGHT_DETECTOR
+    - LEAF_LITTER
+    - SCULK_VEIN
+
+Passthrough:
+  Repulsion: 0.0
+  List:
+    - ALLIUM
+    - AZURE_BLUET
+    - BLUE_ORCHID
+    - BROWN_MUSHROOM
+    - BUSH
+    - CACTUS_FLOWER
+    - CLOSED_EYEBLOSSOM
+    - CORNFLOWER
+    - DANDELION
+    - DEAD_BUSH
+    - FERN
+    - FIREFLY_BUSH
+    - LILAC
+    - LILY_OF_THE_VALLEY
+    - OPEN_EYEBLOSSOM
+    - ORANGE_TULIP
+    - OXEYE_DAISY
+    - PEONY
+    - PINK_PETALS
+    - PINK_TULIP
+    - POPPY
+    - RED_MUSHROOM
+    - RED_TULIP
+    - ROSE_BUSH
+    - SHORT_DRY_GRASS
+    - SHORT_GRASS
+    - SUNFLOWER
+    - TALL_DRY_GRASS
+    - TALL_GRASS
+    - TORCHFLOWER
+    - WHITE_TULIP
+    - WILDFLOWERS
+    - WITHER_ROSE
+    - ACACIA_SAPLING
+    - AZALEA
+    - BAMBOO_SAPLING
+    - BIRCH_SAPLING
+    - CHERRY_SAPLING
+    - DARK_OAK_SAPLING
+    - FLOWERING_AZALEA
+    - JUNGLE_SAPLING
+    - MANGROVE_PROPAGULE
+    - OAK_SAPLING
+    - PALE_OAK_SAPLING
+    - SPRUCE_SAPLING
+    - TORCH
+    - COPPER_TORCH
+    - COPPER_WALL_TORCH
+    - REDSTONE_TORCH
+    - REDSTONE_WALL_TORCH
+    - SOUL_TORCH
+    - SOUL_WALL_TORCH
+    - WALL_TORCH
+    - TRIPWIRE
+    - TRIPWIRE_HOOK
+    - COBWEB
