@@ -20,8 +20,10 @@ object NotifyDisabledHandler {
 
     fun loadNotifyDisabled() {
         try {
+            val notifyDisabledFile = File(plugin.dataFolder, "notify-disabled.txt")
+            if (!notifyDisabledFile.exists()) return
             notifyDisabled.clear()
-            for (line in Files.readAllLines(File(plugin.dataFolder, "notify-disabled.txt").toPath())) {
+            for (line in notifyDisabledFile.readLines()) {
                 try {
                     notifyDisabled.add(UUID.fromString(line))
                 } catch (e: IllegalArgumentException) {
@@ -39,7 +41,6 @@ object NotifyDisabledHandler {
             val notifyDisabledFile = File(plugin.dataFolder, "notify-disabled.txt")
             if (!notifyDisabledFile.exists()) notifyDisabledFile.createNewFile()
             PrintWriter(notifyDisabledFile, "UTF-8").use { writer ->
-                writer.println("# The following players disabled SBG's notification for themselves")
                 for (uuid in notifyDisabled) {
                     writer.println(uuid.toString())
                 }

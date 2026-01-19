@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.service
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.api.BallHitEvent
 import com.github.kanesada2.SnowballGame.api.PlayerHitBallEvent
 import com.github.kanesada2.SnowballGame.config.BallConfig
@@ -49,8 +50,8 @@ object BallHitProcessor {
         coefficient: Double
     ): Vector {
         return originalVelocity.clone()
-            .multiply(-0.3)
-            .add(batMove.clone().add(fromCenter.clone().normalize().multiply(2)))
+            .multiply(Constants.HitProcessing.ORIGINAL_VELOCITY_DAMPING)
+            .add(batMove.clone().add(fromCenter.clone().normalize().multiply(Constants.HitProcessing.HIT_DIRECTION_MULTIPLIER)))
             .multiply(power * coefficient)
     }
 
@@ -90,7 +91,7 @@ object BallHitProcessor {
         val horizontalSpin = tangentialDirection.dot(rightward)  // 左右方向の擦れ
 
         // バックスピン成分：打球の進行方向に垂直な水平軸周りの回転
-        val backspinVector = rightward.multiply(verticalSpin).multiply(2) // バットの形状的にバックスピン成分のほうがずっと強くなるはず
+        val backspinVector = rightward.multiply(verticalSpin).multiply(Constants.HitProcessing.BACKSPIN_MULTIPLIER) // バットの形状的にバックスピン成分のほうがずっと強くなるはず
 
         // サイドスピン成分：鉛直軸周りの回転
         val sidespinVector = upward.multiply(-horizontalSpin)
@@ -99,7 +100,7 @@ object BallHitProcessor {
         val totalSpin = backspinVector.add(sidespinVector)
 
         // 芯を外していて、強くスイングしているほど回転がかかる
-        val coefficient = fromCenter.length() * 0.01 * force
+        val coefficient = fromCenter.length() * Constants.HitProcessing.OFF_CENTER_SPIN_COEFFICIENT * force
 
         return  totalSpin.normalize().multiply(coefficient)
     }

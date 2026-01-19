@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.entity
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.PersistentDataKeys
 import com.github.kanesada2.SnowballGame.api.BallBounceEvent
 import com.github.kanesada2.SnowballGame.api.BallThrownEvent
@@ -11,6 +12,7 @@ import com.github.kanesada2.SnowballGame.extension.BukkitRunnableExtension.repea
 import com.github.kanesada2.SnowballGame.extension.MetaKeys
 import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.getMeta
 import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.setMeta
+import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.updateMeta
 import com.github.kanesada2.SnowballGame.extension.getPdc
 import com.github.kanesada2.SnowballGame.extension.hasPdc
 import com.github.kanesada2.SnowballGame.extension.knockedBackedByProjectile
@@ -58,7 +60,7 @@ data class LaunchSettings(
 
 data class BounceSettings(
     val hitBlock: Block,
-    val repulsion: Vector = Vector(0.7, 0.4, 0.7) // という設定
+    val repulsion: Vector = Constants.BallPhysics.DEFAULT_REPULSION.clone()
 )
 
 @JvmInline
@@ -99,7 +101,11 @@ value class Ball(val projectile : Projectile) {
             }
             if (isPitching) {
                 Bukkit.getPluginManager().callEvent(BallThrownEvent(launched))
-                val entities: MutableCollection<Entity> = launched.getNearbyEntities(50.0, 10.0, 50.0)
+                val entities: MutableCollection<Entity> = launched.getNearbyEntities(
+                    Constants.BallPhysics.UMPIRE_DETECT_RANGE_X,
+                    Constants.BallPhysics.UMPIRE_DETECT_RANGE_Y,
+                    Constants.BallPhysics.UMPIRE_DETECT_RANGE_Z
+                )
                 for (entity in entities) {
                     if (entity is ArmorStand) {
                         Umpire.from(entity)?.prepare(launched)
@@ -125,12 +131,13 @@ value class Ball(val projectile : Projectile) {
             return projectile
         }
 
+        val bounceCount = projectile.getMeta(MetaKeys.BOUNCE_COUNT)?:0
         // 同じ場所でのバウンド回数チェック
         val samePlace = checkSamePlaceBounce()
 
         // 通り抜け判定
-        if (BounceConfig.isPassthrough(hitBlock) || samePlace > 5) {
-            return launchThrough()
+        if (BounceConfig.isPassthrough(hitBlock) || samePlace > Constants.BallPhysics.MAX_SAME_PLACE_BOUNCE) {
+            return launchThrough(hitBlock, bounceCount)
         }
 
         // 衝突面を特定
@@ -147,40 +154,44 @@ value class Ball(val projectile : Projectile) {
         // projectileHitがなぜかめり込んだ位置で衝突したことにしてくることがあるので、対策
         val hitLocation = BallHitLocationCorrector.correctHitLocationIfNeeded(projectile.location, hitFace, hitBlock)
 
-        if(result.shouldDrop){
+        // 転がりに移行
+        if (result.shouldRoll && BounceConfig.isPassthrough(hitBlock.getRelative(BlockFace.UP))) {
+            return roll(hitBlock, hitLocation, bounceCount)
+        }
+
+        if(result.shouldDrop || bounceCount > Constants.BallPhysics.MAX_BOUNCE_COUNT){
             dropAsItem()
             return projectile
         }
-        // 転がりに移行
-        if (result.shouldRoll && BounceConfig.isPassthrough(hitBlock.getRelative(BlockFace.UP))) {
-            return roll(hitBlock, hitLocation)
-        }
+
         // 新しいボールを生成
-        return launchBounced(result, hitLocation, samePlace, hitBlock)
+        return launchBounced(result, hitLocation, bounceCount, samePlace, hitBlock)
     }
 
     private fun checkSamePlaceBounce(): Int {
         val hitLoc = projectile.location
         return prevBoundLocation?.let {
-            if (hitLoc.distanceSquared(it) < 1.0) {
+            if (hitLoc.distanceSquared(it) < Constants.BallPhysics.SAME_PLACE_DISTANCE_SQUARED) {
                 (projectile.getMeta(MetaKeys.SAME_PLACE_COUNT) ?: 0) + 1
             } else 0
         } ?: 0
     }
 
 
-    private fun launchThrough(): Projectile {
-        val hitLoc = projectile.location.add(projectile.velocity).apply { y += 0.1 }
-        return launch(LaunchSettings(
+    private fun launchThrough(hitBlock: Block, bounceCount: Int): Projectile {
+        val hitLoc = projectile.location.add(projectile.velocity).apply { y += hitBlock.boundingBox.maxY - hitBlock.boundingBox.minY }
+        val bounced = launch(LaunchSettings(
             shooter = projectile.shooter!!,
             ballType = this.ballType,
             velocity = projectile.velocity,
             rPoint = hitLoc,
             ballName = nameForDrop
         )).projectile
+        bounced.setMeta(MetaKeys.BOUNCE_COUNT, bounceCount + 1)
+        return bounced
     }
 
-    private fun launchBounced(result: BallBounceCalculator.BounceResult, hitLocation: Location,  samePlace: Int, hitBlock: Block): Projectile {
+    private fun launchBounced(result: BallBounceCalculator.BounceResult, hitLocation: Location, bounceCount: Int, samePlace: Int, hitBlock: Block): Projectile {
         val bounced = launch(LaunchSettings(
             shooter = projectile.shooter!!,
             ballType = this.ballType,
@@ -192,6 +203,7 @@ value class Ball(val projectile : Projectile) {
         bounced.setMeta(MetaKeys.SPIN_VECTOR, result.spin)
         bounced.setMeta(MetaKeys.PREV_BOUND_LOCATION, projectile.location)
         bounced.setMeta(MetaKeys.SAME_PLACE_COUNT, samePlace)
+        bounced.setMeta(MetaKeys.BOUNCE_COUNT, bounceCount + 1)
 
         Bukkit.getPluginManager().callEvent(
             BallBounceEvent(bounced, hitBlock, projectile, this.isInFlight)
@@ -201,12 +213,12 @@ value class Ball(val projectile : Projectile) {
     }
 
 
-    fun roll(hitBlock: Block, hitLocation: Location) : Projectile{
+    fun roll(hitBlock: Block, hitLocation: Location, bounceCount: Int) : Projectile{
         val velocity = projectile.velocity
         velocity.y = 0.0
         // 薄いブロックへの衝突の場合、そのブロックを避けられるくらいにずらしてあげる
         if (BounceConfig.isAlwaysTop(hitBlock)) {
-            hitLocation.y += 0.15
+            hitLocation.y += hitBlock.boundingBox.maxY - hitBlock.boundingBox.minY
         } else {
             hitLocation.y = hitLocation.blockY.toDouble()
         }
@@ -221,6 +233,7 @@ value class Ball(val projectile : Projectile) {
         BallRollingTask(bounced).repeat(0,1)
         val bounceEvent = BallBounceEvent(bounced, hitBlock, projectile, this.isInFlight)
         Bukkit.getPluginManager().callEvent(bounceEvent)
+        bounced.setMeta(MetaKeys.BOUNCE_COUNT, bounceCount + 1)
         return bounced
     }
 

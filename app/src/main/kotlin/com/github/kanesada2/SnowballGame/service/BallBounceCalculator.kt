@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.service
 
+import com.github.kanesada2.SnowballGame.Constants
 import org.bukkit.block.BlockFace
 import org.bukkit.util.Vector
 import kotlin.math.abs
@@ -21,11 +22,11 @@ object BallBounceCalculator {
         spin: Vector
     ): BounceResult {
         // 失速していたらアイテム化
-        if(velocity.length() < 0.15){
+        if(velocity.length() < Constants.BallPhysics.VELOCITY_DROP_THRESHOLD){
             return BounceResult(velocity, spin, shouldRoll = false, shouldDrop = true)
         }
         // 転がり判定
-        if (hitFace == BlockFace.UP && abs(velocity.y) < 0.15) {
+        if (hitFace == BlockFace.UP && abs(velocity.y) < Constants.BallPhysics.ROLLING_VELOCITY_THRESHOLD) {
             return BounceResult(velocity.clone().setY(0), spin, shouldRoll = true)
         }
 
@@ -34,7 +35,7 @@ object BallBounceCalculator {
         val angle = calculateImpactAngle(velocity, hitFace)
 
         val result = applyRepulsion(reflected, repulsion, angle)
-            .apply { multiply(1.3.pow(-length())) }
+            .apply { multiply(Constants.BallPhysics.BOUNCE_ENERGY_DECAY_BASE.pow(-length())) }
             .add(spinEffect)
 
         val newSpin = calculateNewSpin(spin, velocity, hitFace)
@@ -61,7 +62,7 @@ object BallBounceCalculator {
             .multiply(-1)
             .getCrossProduct(velocity)
             .normalize()
-            .multiply(spin.length() * 9)
+            .multiply(spin.length() * Constants.BallPhysics.SPIN_EFFECT_MULTIPLIER)
             .apply {
                 x *= repulsion.x
                 y *= repulsion.y
@@ -77,7 +78,7 @@ object BallBounceCalculator {
         }
 
         val angle = velocity.angle(linear).toDouble()
-        return if (angle.isNaN()) 0.0 else angle / Math.toRadians(90.0)
+        return if (angle.isNaN()) 0.0 else angle / Constants.BallPhysics.RIGHT_ANGLE_RADIANS
     }
 
     private fun applyRepulsion(velocity: Vector, repulsion: Vector, angle: Double): Vector {
@@ -99,7 +100,7 @@ object BallBounceCalculator {
         } else Vector(0, 0, 0)
 
         return spin.clone()
-            .multiply(0.01)
-            .add(linear.getCrossProduct(normal).multiply(0.003))
+            .multiply(Constants.BallPhysics.SPIN_COEFFICIENT_ON_BOUNCE)
+            .add(linear.getCrossProduct(normal).multiply(Constants.BallPhysics.LINEAR_TO_SPIN_COEFFICIENT))
     }
 }

@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.service
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.config.GloveConfig
 import org.bukkit.Location
 import org.bukkit.util.Vector
@@ -21,10 +22,10 @@ object GloveAttributesCalculator {
         val releasePointModifier = Vector(0.0, config?.vertical ?: 0.0, 0.0)
         // 向いている向きの真横を取る
         eye.yaw += 90
-        val horizontalOffset = (0.2 + (config?.horizontal ?: 0.0)) * moveDirection
+        val horizontalOffset = (Constants.GloveAttributes.BASE_HORIZONTAL_OFFSET + (config?.horizontal ?: 0.0)) * moveDirection
         releasePointModifier.add(eye.direction.normalize().multiply(horizontalOffset))
         // 腕の高さを変えるとリリースでボールを叩く向きが変わる、の感じを再現(前/後で離す、は影響しない)
-        val velocityModifier = releasePointModifier.clone().multiply(-0.1)
+        val velocityModifier = releasePointModifier.clone().multiply(Constants.GloveAttributes.VELOCITY_MODIFIER_MULTIPLIER)
         // 向いている向きに戻す
         eye.yaw -= 90
         releasePointModifier.add(eye.direction.normalize().multiply(config?.closeness ?: 0.0))

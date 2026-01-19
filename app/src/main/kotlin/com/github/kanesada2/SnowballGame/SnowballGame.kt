@@ -18,7 +18,6 @@ class SnowballGame : JavaPlugin() {
         MetadatableExtension.init(this)
         BukkitRunnableExtension.init(this)
         NotifyDisabledHandler.init(this)
-        NotifyDisabledHandler.saveNotifyDisabled()
         NotifyDisabledHandler.loadNotifyDisabled()
         server.pluginManager.registerEvents(SnowballGameListener(), this)
         getCommand("SnowballGame")?.setExecutor(SnowballGameCommandExecutor())

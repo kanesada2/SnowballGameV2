@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.service
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.config.BounceConfig
 import org.bukkit.Location
 import org.bukkit.block.Block
@@ -30,7 +31,7 @@ object BallHitLocationCorrector {
         if(!needsCorrection(hitLocation, hitBlock, hitFace)) return hitLocation
 
         val targetBlock = generateSequence(hitBlock) { it.getRelative(hitFace) }
-            .take(5)
+            .take(Constants.Misc.MAX_CORRECTION_SEARCH_DEPTH)
             .firstOrNull { BounceConfig.isPassthrough(it.getRelative(hitFace)) || BounceConfig.isAlwaysTop(it.getRelative(hitFace)) }
             ?: return hitLocation
 

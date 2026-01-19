@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.task
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.api.UmpireCallEvent
 import com.github.kanesada2.SnowballGame.config.MessageConfig
 import com.github.kanesada2.SnowballGame.config.MessageType
@@ -28,7 +29,7 @@ class BallJudgeTask(
             this.cancel()
             return
         }
-        if (count > 100) {
+        if (count > Constants.BallJudge.MAX_JUDGE_COUNT) {
             this.cancel()
         }
         var i = 0.0
@@ -38,7 +39,7 @@ class BallJudgeTask(
                     .isInAABB(minimumCorner.toVector(), maximumCorner.toVector())
             ) {
                 val message = MessageConfig[MessageType.STRIKE]
-                val speedStr = String.format("%.1f", ball.velocity.length() * 72) + "km/h"
+                val speedStr = String.format("%.1f", ball.velocity.length() * Constants.BallJudge.VELOCITY_TO_KMH) + "km/h"
                 val typeStr = ball.getMeta(MetaKeys.MOVING_TYPE).toString()
                 val playerStr = (ball.shooter as? Player)?.displayName?:"Dispenser"
                 val msgString = message.format(
@@ -62,7 +63,7 @@ class BallJudgeTask(
                 this.cancel()
                 break
             }
-            i += 0.1
+            i += Constants.BallJudge.JUDGE_RESOLUTION
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.api.BallBounceEvent
 import com.github.kanesada2.SnowballGame.api.PlayerCatchBallEvent
 import com.github.kanesada2.SnowballGame.api.PlayerHitBallEvent
@@ -130,7 +131,7 @@ class SnowballGameListener: Listener {
         Thrower.from(e.player)?.let {
             e.isCancelled = true
             it.toss()
-            e.player.world.playSound(e.player.eyeLocation, Sound.ENTITY_SNOWBALL_THROW , 0.5f, 0.0f)
+            e.player.world.playSound(e.player.eyeLocation, Sound.ENTITY_SNOWBALL_THROW , Constants.Effects.THROW_SOUND_VOLUME, 0.0f)
         }
     }
 
@@ -238,7 +239,7 @@ class SnowballGameListener: Listener {
     @EventHandler
     fun onBallSnowDig(e: BlockBreakEvent){
         // 「雪だるまの作った雪」ではなく、「そのとき雪だるまの足元にある雪」なので注意
-        e.block.world.getNearbyEntities(e.block.location, 0.5,0.5,0.5)
+        e.block.world.getNearbyEntities(e.block.location, Constants.Misc.SNOWMAN_DETECT_RANGE, Constants.Misc.SNOWMAN_DETECT_RANGE, Constants.Misc.SNOWMAN_DETECT_RANGE)
             .filterIsInstance<Snowman>()
             .firstNotNullOfOrNull(Ballmaker::from)?.let {
                 e.isDropItems = false
@@ -270,7 +271,7 @@ class SnowballGameListener: Listener {
 
     @EventHandler
     fun onSwing(e: PlayerSwingBatEvent){
-        if(e.force > 0.4){
+        if(e.force > Constants.Misc.SWING_FORCE_THRESHOLD){
             MessageConfig.broadcast(MessageType.SWING, e.player.location, "PLAYER" to e.player.displayName)
             ParticleConfig.spawnIfEnabled(ParticleType.SWING_BAT, e.center)
         }else {
@@ -294,7 +295,7 @@ class SnowballGameListener: Listener {
             val cloud = e.beforeBounce.world.spawnEntity(e.beforeBounce.location, EntityType.AREA_EFFECT_CLOUD) as AreaEffectCloud
             cloud.particle = it
             cloud.duration = config.time
-            cloud.radius = 1.5f
+            cloud.radius = Constants.Effects.BOUNCE_EFFECT_RADIUS
         }
     }
 

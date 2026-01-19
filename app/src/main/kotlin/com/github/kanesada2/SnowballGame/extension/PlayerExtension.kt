@@ -15,7 +15,7 @@ fun Player.knockedBackedByProjectile(projectile: Projectile){
         this.damage(1.0)
         this.health = health
     }
-    val knockbackVec: Vector = projectile.velocity.multiply(0.4)
+    val knockbackVec: Vector = projectile.velocity.multiply(0.5)
     if (knockbackVec.getY() < 0.3) {
         knockbackVec.setY(0.3)
     }

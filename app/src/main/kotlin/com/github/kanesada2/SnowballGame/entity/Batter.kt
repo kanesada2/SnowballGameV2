@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.entity
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.PersistentDataKeys
 import com.github.kanesada2.SnowballGame.config.ParticleConfig
 import com.github.kanesada2.SnowballGame.config.ParticleType
@@ -23,6 +24,7 @@ import org.bukkit.inventory.MainHand
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.util.Vector
 import java.util.*
+import kotlin.contracts.contract
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -32,9 +34,9 @@ data class SwingAttributes(
     val center: Location,
     val hitRange: Vector,
     val force: Double,
-    val rate: Double = 1.3,
+    val rate: Double = Constants.Batter.DEFAULT_SWING_RATE,
     val batMove: Vector,
-    val coefficient: Double = 1.0
+    val coefficient: Double = Constants.Batter.DEFAULT_SWING_COEFFICIENT
 )
 enum class SwingState {
     IDLE,
@@ -58,7 +60,10 @@ value class Batter(override val player: Player): CanSlide {
     val swingGauge: BossBar?
         get() = Bukkit.getBossBar(bossBarKey)
     val currentPower: Double
-        get() = swingGauge?.progress ?: 0.0
+        get() {
+            val power = (swingGauge?.progress ?: 0.0) * Constants.Batter.SWING_POWER_SNEAK_AMPLIFIER
+            return if(player.isSneaking) power else power + Constants.Batter.SWING_POWER_ADJUSTMENT
+        }
     val swingState: SwingState
         get() = SwingState.valueOf(player.getMeta(MetaKeys.SWING_STATE)?: SwingState.IDLE.name)
     val isIdling: Boolean
@@ -92,7 +97,7 @@ value class Batter(override val player: Player): CanSlide {
         }else if(isReady){
             swing()
         }
-        PlayerCoolDownTask(player).later(1)
+        PlayerCoolDownTask(player).later(Constants.Batter.SWING_COOLDOWN_TICKS)
     }
 
     fun prepare() {
@@ -104,7 +109,7 @@ value class Batter(override val player: Player): CanSlide {
             BarColor.YELLOW,
             BarStyle.SEGMENTED_20
         ).apply {
-            progress = 0.0
+            progress = Constants.Batter.INITIAL_BAR_PROGRESS
             addPlayer(player)
         }
         val task = GaugeProgressTask(bar).repeat(0, 1)
@@ -136,19 +141,19 @@ value class Batter(override val player: Player): CanSlide {
         val toCenter = player.location.direction.normalize().multiply(batItem.length)
         val center = player.eyeLocation.add(toCenter)
         val force = currentPower * batItem.power
-        val size = batItem.range + (1 - currentPower) * 0.5 * batItem.range
+        val size = batItem.range + (1 - currentPower) * Constants.Batter.HIT_RANGE_MODIFIER * batItem.range
         val range = Vector(1,1,1).multiply(size)
 
         val bat = Bat.spawn(center)
 
-        if(currentPower > 0.7 && ParticleConfig.isEnabled(ParticleType.SWING_BAT_SEQUENT)){
+        if(currentPower > Constants.Batter.STRONG_SWING_THRESHOLD && ParticleConfig.isEnabled(ParticleType.SWING_BAT_SEQUENT)){
             val eye = player.eyeLocation
             var i = 0.0
             while (abs(i) < Math.PI) {
                 val swing = calcBatPosition(batItem, i)
                 swing.add(0.0, eye.getDirection().getY() + 1, 0.0)
                 ParticleConfig.spawnIfEnabled(ParticleType.SWING_BAT_SEQUENT, swing)
-                i += 0.15708 * (if (isRight) -1 else 1)
+                i += Constants.Batter.SWING_ARC_STEP * (if (isRight) -1 else 1)
             }
         }
 
@@ -169,7 +174,7 @@ value class Batter(override val player: Player): CanSlide {
     private fun calcBatMove(bat: BatItem): Vector {
         val rollDirection = if (isRight) -1 else 1
         // へその前（後頭部から90度回ったところ）から少し進めたところから少し押せるのがジャストタイミングでのインパクト
-        return calcBatPosition(bat, (Math.PI / 2 + 0.01) * rollDirection)
+        return calcBatPosition(bat, (Math.PI / 2 + Constants.Batter.IMPACT_ADJUSTMENT) * rollDirection)
             .subtract(calcBatPosition(bat, Math.PI / 2 * rollDirection))
             .toVector().normalize()
     }

@@ -14,6 +14,7 @@ object MetaKeys {
     val MOVING_TYPE = MetadataKey<String>("movingType")
 
     val IS_IN_FLIGHT = MetadataKey<Boolean>("isInFlight")
+    val BOUNCE_COUNT = MetadataKey<Int>("bounceCount")
     val PREV_BOUND_LOCATION = MetadataKey<Location>("prevBoundLocation")
     val SAME_PLACE_COUNT = MetadataKey<Int>("samePlaceCount")
 

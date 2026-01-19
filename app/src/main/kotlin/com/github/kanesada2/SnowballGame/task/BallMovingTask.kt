@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.task
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.config.ParticleConfig
 import com.github.kanesada2.SnowballGame.config.ParticleType
 import com.github.kanesada2.SnowballGame.extension.MetaKeys
@@ -52,7 +53,7 @@ class BallMovingTask : BukkitRunnable {
             // 運動のベクトルと回転のベクトル表示の外積がマグヌス力
             actualMove = spinVector.getCrossProduct(velocity)
             // 空気抵抗を考慮し、毎tick回転数を1％減衰する
-            this.spinVector.multiply(0.99)
+            this.spinVector.multiply(Constants.BallPhysics.SPIN_DECAY_PER_TICK)
             if (actualMove.length() != 0.0) {
                 actualMove.normalize().multiply(spinVector.length())
             }
@@ -62,9 +63,9 @@ class BallMovingTask : BukkitRunnable {
             velocity.add(actualMove)
         }
         if (random != 0.0) {
-            this.randomX += Math.random() * 0.3
-            this.randomY += Math.random() * 0.3
-            this.randomZ += Math.random() * 0.3
+            this.randomX += Math.random() * Constants.BallPhysics.RANDOM_DIRECTION_STEP
+            this.randomY += Math.random() * Constants.BallPhysics.RANDOM_DIRECTION_STEP
+            this.randomZ += Math.random() * Constants.BallPhysics.RANDOM_DIRECTION_STEP
             // 連続して同じ方向への変化がある程度出やすいよう、正弦曲線上をランダムな始点から十分に小さいランダムなステップで進む
             val toAdd = Vector(sin(randomX), sin(randomY), sin(randomZ))
             toAdd.multiply(random)
@@ -75,11 +76,11 @@ class BallMovingTask : BukkitRunnable {
         particle?.let { particle->
             if (particle.dataType == BlockData::class.java) {
                 particleBlock?.let { block ->
-                    ball.world.spawnParticle(particle, ball.location, 5, 0.5, 0.5, 0.5, Bukkit.createBlockData(block))
+                    ball.world.spawnParticle(particle, ball.location, Constants.Effects.MOVING_BALL_PARTICLE_COUNT, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Bukkit.createBlockData(block))
                     return
                 }
             }
-            ball.world.spawnParticle(particle, ball.location, 5, 0.5, 0.5, 0.5)
+            ball.world.spawnParticle(particle, ball.location, Constants.Effects.MOVING_BALL_PARTICLE_COUNT, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD)
         }
     }
 }

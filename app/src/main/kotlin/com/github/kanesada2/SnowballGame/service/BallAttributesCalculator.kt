@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.service
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.config.BallConfig
 import org.bukkit.Material
 import org.bukkit.Particle
@@ -89,9 +90,9 @@ object BallAttributesCalculator {
         val(vertical, horizontal) = directionalVectors
         val verticalModifier: Vector = vertical.clone()
         if (vertical.getY() > 0) {
-            verticalModifier.multiply(0.9)
+            verticalModifier.multiply(Constants.BallAttributes.DISPENSER_VERTICAL_CORRECTION)
         }
-        return verticalModifier.add(horizontal.clone().multiply(0.65)).multiply(-(15 / velocity.length()))
+        return verticalModifier.add(horizontal.clone().multiply(Constants.BallAttributes.DISPENSER_HORIZONTAL_CORRECTION)).multiply(-(Constants.BallAttributes.DISPENSER_CORRECTION_INTENSITY / velocity.length()))
     }
 
     private fun calcDirectionalVectors(

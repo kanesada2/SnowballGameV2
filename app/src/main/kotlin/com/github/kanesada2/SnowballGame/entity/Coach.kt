@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.entity
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.PersistentDataKeys
 import com.github.kanesada2.SnowballGame.config.*
 import com.github.kanesada2.SnowballGame.extension.hasPdc
@@ -8,6 +9,7 @@ import com.github.kanesada2.SnowballGame.item.BallItem
 import com.github.kanesada2.SnowballGame.item.BatItem
 import com.github.kanesada2.SnowballGame.item.CoachItem
 import com.github.kanesada2.SnowballGame.item.GloveItem
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
@@ -57,6 +59,9 @@ value class Coach(val stand: ArmorStand) {
                 val coach = from(this)
                 coach?.let { equipment?.armorContents = it.defaultEquipments }
                 equipment?.setItemInMainHand(BatItem.generate().item)
+                if(player.gameMode != GameMode.CREATIVE){
+                    player.inventory.itemInMainHand.amount -= 1
+                }
                 return coach
             }
             return null
@@ -117,7 +122,10 @@ value class Knocker(val coach: Coach): CoachRole{
                     fielders.add(player)
                 }
             }
-            if (fielders.isEmpty()) return
+            if (fielders.isEmpty()){
+                ball.dropAsItem()
+                return
+            }
             actualPlayer = fielders.random()
         }else {
             actualPlayer = ball.projectile.shooter as? Player?: return
@@ -131,31 +139,31 @@ value class Knocker(val coach: Coach): CoachRole{
 
         // 重いシミュレートを伴う飛距離計算抜きにちょうどいいくらいの打球にするために、ここからひたすらに秘伝のタレ
         // コクのある乱数（自然分布に近い）に距離に比例する数をかけることで、極端なフライやゴロが出にくいように
-        val randomY = (Math.random() - Math.random()) * (distance / 30)
+        val randomY = (Math.random() - Math.random()) * (distance / Constants.Coach.VERTICAL_RANDOM_DISTANCE_DIVISOR)
         // ゴロなら強く、フライなら弱めに打ったほうがいいので
-        knockedVec.multiply(2.2.pow(-randomY))
+        knockedVec.multiply(Constants.Coach.POWER_ADJUSTMENT_BASE.pow(-randomY))
 
         val randomizer = Vector(
-            (Math.random() - Math.random()) / (distance / 8),
+            (Math.random() - Math.random()) / (distance / Constants.Coach.HORIZONTAL_RANDOM_DISTANCE_DIVISOR),
             randomY,
-            (Math.random() - Math.random()) / (distance / 8)
+            (Math.random() - Math.random()) / (distance / Constants.Coach.HORIZONTAL_RANDOM_DISTANCE_DIVISOR)
         )
         knockedVec.add(randomizer)
         // 極端なフライやゴロは更に少し弱めておく
-        if (knockedVec.angle(knockedVec.clone().setY(0)) > 0.5) {
-            knockedVec.multiply(0.7)
+        if (knockedVec.angle(knockedVec.clone().setY(0)) > Constants.Coach.EXTREME_ANGLE_THRESHOLD) {
+            knockedVec.multiply(Constants.Coach.EXTREME_ANGLE_POWER_REDUCTION)
         }
         val angle = knockedVec.angle(knockedVec.clone().setY(0)) * sign(knockedVec.getY())
         val coefficient =BallConfig.getCoefficient(ballType)
 
-        if (angle > 30) {
-            knockedVec.setY(knockedVec.getY() * coefficient.pow(2.0))
+        if (angle > Constants.Coach.STEEP_ANGLE_DEGREES) {
+            knockedVec.setY(knockedVec.getY() * coefficient.pow(Constants.Coach.POWER_ADJUSTMENT_EXPONENT))
         } else {
-            knockedVec.setY(knockedVec.getY() / coefficient.pow(2.0))
+            knockedVec.setY(knockedVec.getY() / coefficient.pow(Constants.Coach.POWER_ADJUSTMENT_EXPONENT))
         }
         // 打球の飛距離を最後に調整
-        knockedVec.multiply(coefficient * distance / 25)
-        val spinVector = Vector.getRandom().normalize().multiply(0.005 / (1 + 2.0.pow(-knockedVec.length())))
+        knockedVec.multiply(coefficient * distance / Constants.Coach.FLIGHT_DISTANCE_DIVISOR)
+        val spinVector = Vector.getRandom().normalize().multiply(Constants.Coach.BASE_SPIN_MAGNITUDE / (1 + Constants.Coach.SPIN_VELOCITY_EXPONENT_BASE.pow(-knockedVec.length())))
 
         player.sendMessage("Catch the ball!!!")
         val newBall = Ball.launch(LaunchSettings(
@@ -192,7 +200,7 @@ value class Pivot(val coach: Coach): CoachRole{
         (ball.projectile.shooter as? ArmorStand)
             ?.let{ Coach.from(it)}
             ?.let{if(from(it) != null) return}
-        val velocity: Vector = coach.stand.eyeLocation.getDirection().normalize().multiply(1.5)
+        val velocity: Vector = coach.stand.eyeLocation.getDirection().setY(0).normalize().multiply(1.5)
         Ball.launch(LaunchSettings(
             shooter = coach.stand as ProjectileSource,
             velocity = velocity,

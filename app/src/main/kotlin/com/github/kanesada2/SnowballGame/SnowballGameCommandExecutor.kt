@@ -55,7 +55,7 @@ enum class SBGCommand(val permission: SBGPermission) {
 }
 
 class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
-    private val subCommands = listOf("reload", "get", "please", "sweep", "update")
+    private val subCommands = listOf("reload", "get", "please", "sweep", "msg", "update")
     private val itemTypes = listOf("Ball", "Bat", "Glove", "Umpire", "Coach", "Base")
     private val ballTypes = listOf("Highest", "Higher", "Normal", "Lower", "Lowest")
 
@@ -72,11 +72,13 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
         return when (args.size) {
             1 -> subCommands.filter { it.startsWith(input, ignoreCase = true) }
             2 -> if (args[0].equals("get", ignoreCase = true)) {
-                itemTypes.filter { it.startsWith(input, ignoreCase = true) }
-            } else emptyList()
+                    itemTypes.filter { it.startsWith(input, ignoreCase = true) }
+                } else if (args[0].equals("msg", ignoreCase = true)){
+                    listOf("on", "off")
+                } else emptyList()
             3 -> if (args[1].equals("ball", ignoreCase = true)) {
                 ballTypes.filter { it.startsWith(input, ignoreCase = true) }
-            } else emptyList()
+                } else emptyList()
             else -> emptyList()
         }
     }
@@ -130,7 +132,10 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
     }
 
     private fun handleReload (sender: CommandSender): Boolean {
-        if(sender !is ConsoleCommandSender) return false
+        if(sender !is ConsoleCommandSender) {
+            sender.sendMessage("please send this command from console.")
+            return false
+        }
         ConfigLoader.load()
         Bukkit.getLogger().info("SnowballGame Reloaded!")
         return true
@@ -144,22 +149,23 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
             sender.sendMessage("Your coach can't hit the next ball so quickly.")
             return false
         }
-        sender.inventory.firstNotNullOfOrNull(BallItem::from)?.let { ball->
-            sender.getNearbyEntities(CoachConfig.range, 10.0, CoachConfig.range)
-                .filterIsInstance<ArmorStand>()
-                .firstNotNullOfOrNull(Coach::from)
-                ?.let {coach ->
-                    Knocker.from(coach)?.hitBall(ball.ballType!!, sender)
-                }?:run{
-                sender.sendMessage("You are too far from your coach to practice.")
+        val ball = sender.inventory.filterNotNull()
+            .firstNotNullOfOrNull(BallItem::from)
+            ?: run {
+                sender.sendMessage("You must have at least one ball to send this command.")
                 return false
             }
-            // これをやりつつコーチがいなかったとき失敗させなきゃいけないのでネストが深い
-            ball.item.amount -= 1
-        }?: run {
-            sender.sendMessage("You must have at least one ball to send this command.")
-            return false
-        }
+
+        val knocker = sender.getNearbyEntities(CoachConfig.range, 10.0, CoachConfig.range)
+            .filterIsInstance<ArmorStand>()
+            .mapNotNull { Coach.from(it) }.firstNotNullOfOrNull { Knocker.from(it) }
+            ?: run {
+                sender.sendMessage("Your coach is not ready to knock.")
+                return false
+            }
+
+        knocker.hitBall(ball.ballType!!, sender)
+        ball.item.amount -= 1
         sender.setMeta(MetaKeys.PROHIBIT_CALLING_KNOCK, true)
         PlayerCoolDownTask(sender).later(BallConfig.coolTime)
         return true
@@ -169,7 +175,7 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
             sender.sendMessage("Please send this command in game.")
             return false
         }
-        val entities = sender.getNearbyEntities(3.0, 3.0, 3.0)
+        val entities = sender.getNearbyEntities(Constants.Commands.SWEEP_RANGE, Constants.Commands.SWEEP_RANGE, Constants.Commands.SWEEP_RANGE)
         var count = 0
         for (entity in entities) {
             if (entity is Snowball) {

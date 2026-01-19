@@ -1,5 +1,6 @@
 package com.github.kanesada2.SnowballGame.entity
 
+import com.github.kanesada2.SnowballGame.Constants
 import com.github.kanesada2.SnowballGame.api.PlayerCatchBallEvent
 import com.github.kanesada2.SnowballGame.config.BallConfig
 import com.github.kanesada2.SnowballGame.config.BaseConfig
@@ -42,7 +43,7 @@ value class Fielder(override val player: Player) : CanSlide{
             return Fielder(player)
         }
     }
-    fun tryCatch(from: Location? = null, range: Vector? = null, rate: Double = 0.3): Boolean{
+    fun tryCatch(from: Location? = null, range: Vector? = null, rate: Double = Constants.Fielder.DEFAULT_CATCH_RATE): Boolean{
         val gloveItemAttributes = GloveItem.from(player.inventory.itemInOffHand)?.let {
             GloveAttributesCalculator.calc(
                 name = it.name,
@@ -55,7 +56,7 @@ value class Fielder(override val player: Player) : CanSlide{
         val actualFrom = from?: player.location
         // 捕球を試したら5tickの間投球できない
         player.setMeta(MetaKeys.PROHIBIT_THROWING, true)
-        PlayerCoolDownTask(player).later(5)
+        PlayerCoolDownTask(player).later(Constants.Fielder.CATCH_COOLDOWN_TICKS)
 
         val ball = player.world.getNearbyEntities(
             player.eyeLocation,
@@ -82,7 +83,7 @@ value class Fielder(override val player: Player) : CanSlide{
         player.sendMessage("Missed!")
         ball.projectile.apply {
             setGravity(true)
-            velocity = velocity.multiply(Math.random()).add(Vector.getRandom().multiply(0.3))
+            velocity = velocity.multiply(Math.random()).add(Vector.getRandom().multiply(Constants.Fielder.MISS_SCATTER_FACTOR))
         }
         return false
     }
