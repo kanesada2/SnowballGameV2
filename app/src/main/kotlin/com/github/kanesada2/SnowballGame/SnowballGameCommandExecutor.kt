@@ -139,7 +139,7 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
         ConfigLoader.reload()
         Bukkit.getLogger().info("SnowballGame Reloaded!")
         return true
-    }git
+    }
     private fun handlePlease (sender: CommandSender): Boolean {
         if (sender !is Player) {
             sender.sendMessage("Please send this command in game.")
