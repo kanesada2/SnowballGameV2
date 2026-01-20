@@ -129,6 +129,7 @@ object BallHitProcessor {
             shooter = hitEvent.player,
             velocity = hitEvent.velocity,
             ballType = originalBall.ballType,
+            ballName = originalBall.nameForDrop,
             rPoint = originalBall.projectile.location,
             spinVector = hitEvent.spinVector,
             acceleration = hitEvent.acceleration,
@@ -137,6 +138,7 @@ object BallHitProcessor {
             trackerBlock = hitEvent.trackerBlock,
         ))
         hitBall.isInFlight = true
+        originalBall.removeMetaData()
 
         Bukkit.getPluginManager().callEvent(
             BallHitEvent(hitBall.projectile, originalBall.projectile)

@@ -154,10 +154,10 @@ class SnowballGameListener: Listener {
         }
         Batter.from(e.damager as Player)?.let {
             e.isCancelled = true
-            val standingOn = e.entity.location.block
-            val below = e.entity.location.block.getRelative(BlockFace.DOWN)
+            val standingOn = e.damager.location.block
+            val below = e.damager.location.block.getRelative(BlockFace.DOWN)
             (Base.from(standingOn)?:Base.from(below))?.let{ base ->
-                base.handleLeftClick(it.player)
+                base.handleLeftClick(it)
                 return
             }
             it.player.sendMessage("OOPS! Don't swing at anything worth more than the dugout phone!")
@@ -211,7 +211,9 @@ class SnowballGameListener: Listener {
         if(e.action != Action.LEFT_CLICK_BLOCK) return
         Base.from(e.clickedBlock)?.let {
             // メインハンドにバットかオフハンドにグラブを持っているプレイヤーはベースを壊せない
-            e.isCancelled = it.handleLeftClick(e.player)
+            val roledPlayer = Batter.from(e.player) ?: Fielder.from(e.player) ?: return
+            e.isCancelled = true
+            it.handleLeftClick(roledPlayer)
         }
     }
 
@@ -221,10 +223,10 @@ class SnowballGameListener: Listener {
     }
     @EventHandler
     fun onBaseBroken(e: BlockBreakEvent){
-        Base.from(e.block)?.let{
-            e.isDropItems = false
-            it.breakWithBlock(e.block)
-        }
+        // 旧バージョンのアイテムの中でBase系統だけは設置状態でワールドに残ってしまうので、新しいのをドロップしてやる
+        val base = Base.from(e.block) ?: OldBase.from(e.block) ?: return
+        e.isDropItems = false
+        base.breakWithBlock(e.block)
     }
 
     @EventHandler

@@ -45,7 +45,7 @@ object BallConfig : ConfigSection {
         coolTime = section.getInt("Cool_Time", 30)
 
         loadMoveSettings(section.getConfigurationSection("Move"))
-        loadRepulsionSettings(section.getConfigurationSection("Repulsion"))
+        loadRepulsionSettings(section.getConfigurationSection("Repulsion_New"))
     }
 
     private fun loadMoveSettings(section: ConfigurationSection?) {

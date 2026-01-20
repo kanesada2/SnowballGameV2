@@ -21,13 +21,13 @@ class SnowballGame : JavaPlugin() {
         NotifyDisabledHandler.loadNotifyDisabled()
         server.pluginManager.registerEvents(SnowballGameListener(), this)
         getCommand("SnowballGame")?.setExecutor(SnowballGameCommandExecutor())
-        logger.info("SnowballGame Enabled")
+        logger.info("SnowballGame is enabled!")
     }
 
     override fun onDisable() {
         RecipeManager.unregisterAll()
         NotifyDisabledHandler.saveNotifyDisabled()
         server.deleteBalls()
-        logger.info("SnowballGame Disabled")
+        logger.info("SnowballGame is disabled")
     }
 }

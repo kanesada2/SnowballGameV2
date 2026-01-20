@@ -138,7 +138,8 @@ value class Batter(override val player: Player): CanSlide {
     }
 
     fun swing(): List<Ball> {
-        val toCenter = player.location.direction.normalize().multiply(batItem.length)
+        val lengthModifier = currentPower * 0.5 + 0.5 // バントのときはミートポイント近いほうがいい
+        val toCenter = player.location.direction.normalize().multiply(batItem.length * lengthModifier)
         val center = player.eyeLocation.add(toCenter)
         val force = currentPower * batItem.power
         val size = batItem.range + (1 - currentPower) * Constants.Batter.HIT_RANGE_MODIFIER * batItem.range

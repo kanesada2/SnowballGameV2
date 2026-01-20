@@ -76,11 +76,35 @@ class BallMovingTask : BukkitRunnable {
         particle?.let { particle->
             if (particle.dataType == BlockData::class.java) {
                 particleBlock?.let { block ->
-                    ball.world.spawnParticle(particle, ball.location, Constants.Effects.MOVING_BALL_PARTICLE_COUNT, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Bukkit.createBlockData(block))
+                    ball.world.spawnParticle(
+                        particle,
+                        ball.location.x,
+                        ball.location.y,
+                        ball.location.z,
+                        Constants.Effects.MOVING_BALL_PARTICLE_COUNT,
+                        Constants.Effects.PARTICLE_SPREAD,
+                        Constants.Effects.PARTICLE_SPREAD,
+                        Constants.Effects.PARTICLE_SPREAD,
+                        1.0,
+                        Bukkit.createBlockData(block),
+                        true
+                    )
                     return
                 }
             }
-            ball.world.spawnParticle(particle, ball.location, Constants.Effects.MOVING_BALL_PARTICLE_COUNT, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD, Constants.Effects.PARTICLE_SPREAD)
+            ball.world.spawnParticle(
+                particle,
+                ball.location.x,
+                ball.location.y,
+                ball.location.z,
+                Constants.Effects.MOVING_BALL_PARTICLE_COUNT,
+                Constants.Effects.PARTICLE_SPREAD,
+                Constants.Effects.PARTICLE_SPREAD,
+                Constants.Effects.PARTICLE_SPREAD,
+                1.0,
+                null,
+                true
+            )
         }
     }
 }

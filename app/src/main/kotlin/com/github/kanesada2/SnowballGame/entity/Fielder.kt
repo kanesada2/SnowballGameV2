@@ -74,6 +74,7 @@ value class Fielder(override val player: Player) : CanSlide{
         if (Math.random() * catchRate > distance) {
             ball.projectile.remove()
             val event = catch(ball)
+            ball.removeMetaData()
             if (!event.isCancelled) {
                 player.sendMessage("Caught!")
                 return true
@@ -90,8 +91,7 @@ value class Fielder(override val player: Player) : CanSlide{
 
     fun catch(ball: Ball): PlayerCatchBallEvent{
         val inventory: Inventory = player.inventory
-        val ballName = if(ball.reusable) ball.movingType else BallConfig.defaultName
-        val itemBall: ItemStack = BallItem.generate(ball.ballType, ballName).item
+        val itemBall: ItemStack = BallItem.generate(ball.ballType, ball.nameForDrop).item
         val catchEvent = PlayerCatchBallEvent(
             player,
             ball.projectile,

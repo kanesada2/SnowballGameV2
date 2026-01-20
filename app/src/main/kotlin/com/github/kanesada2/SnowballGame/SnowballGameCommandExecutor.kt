@@ -64,7 +64,7 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
         command: Command,
         label: String,
         args: Array<out String?>
-    ): List<String> {
+    ): List<String>? {
         if (!command.name.equals("SnowballGame", ignoreCase = true)) {
             return emptyList()
         }
@@ -136,10 +136,10 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
             sender.sendMessage("please send this command from console.")
             return false
         }
-        ConfigLoader.load()
+        ConfigLoader.reload()
         Bukkit.getLogger().info("SnowballGame Reloaded!")
         return true
-    }
+    }git
     private fun handlePlease (sender: CommandSender): Boolean {
         if (sender !is Player) {
             sender.sendMessage("Please send this command in game.")
@@ -195,7 +195,7 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
             sender.sendMessage("Please send this command in game.")
             return false
         }
-        val items = sender.inventory.filterNotNull().filter{it.itemMeta?.lore?.contains("SnowballGame Item") ?: false}
+        val items = sender.inventory.filterNotNull().filter{it.itemMeta?.lore?.contains(Constants.Misc.OLD_ITEM_MARKER_LORE) ?: false}
         if(items.isEmpty()){
             sender.sendMessage("You don't have any old version items.")
             return false
@@ -295,7 +295,7 @@ class SnowballGameCommandExecutor: CommandExecutor, TabCompleter {
         }
         val inv: Inventory = sender.inventory
         if (inv.containsAtLeast(item, 1) || inv.firstEmpty() != -1) {
-            inv.addItem(item)
+            item?.let {inv.addItem(item)}
         } else {
             item?.let { sender.world.dropItem(sender.location, it) }
         }

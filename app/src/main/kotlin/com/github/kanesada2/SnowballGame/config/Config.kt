@@ -30,6 +30,8 @@ object ConfigLoader {
 
     fun load() {
         plugin.saveDefaultConfig()
+        plugin.config.options().copyDefaults(true)
+        plugin.saveConfig()
         reload()
     }
 

@@ -273,5 +273,8 @@ object Constants {
 
         /** 位置補正の最大探索深度 */
         const val MAX_CORRECTION_SEARCH_DEPTH = 5
+
+        /** 旧バージョンのアイテムを示すlore内の文字列 */
+        const val OLD_ITEM_MARKER_LORE = "SnowballGame Item"
     }
 }

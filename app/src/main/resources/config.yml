@@ -67,7 +67,7 @@ Ball:
       Particle: BLOCK
       Block: ICE
   # the settings of the balls which have different repulsion with being hit.
-  Repulsion:
+  Repulsion_New:
     Highest:
       Coefficient: 1.4
       Name: 'Ball'

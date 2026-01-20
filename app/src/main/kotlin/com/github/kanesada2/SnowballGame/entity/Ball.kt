@@ -11,8 +11,8 @@ import com.github.kanesada2.SnowballGame.config.ParticleType
 import com.github.kanesada2.SnowballGame.extension.BukkitRunnableExtension.repeat
 import com.github.kanesada2.SnowballGame.extension.MetaKeys
 import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.getMeta
+import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.removeMeta
 import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.setMeta
-import com.github.kanesada2.SnowballGame.extension.MetadatableExtension.updateMeta
 import com.github.kanesada2.SnowballGame.extension.getPdc
 import com.github.kanesada2.SnowballGame.extension.hasPdc
 import com.github.kanesada2.SnowballGame.extension.knockedBackedByProjectile
@@ -72,7 +72,7 @@ value class Ball(val projectile : Projectile) {
         get() = projectile.getMeta(MetaKeys.SPIN_VECTOR)?: Vector(0, 0, 0)
         set(value) = projectile.setMeta(MetaKeys.SPIN_VECTOR, value)
     var movingType: String
-        get() = projectile.getMeta(MetaKeys.MOVING_TYPE)?: "Ball"
+        get() = projectile.getMeta(MetaKeys.MOVING_TYPE)?: BallConfig.getRepulsion(ballType).name
         set(value) = projectile.setMeta(MetaKeys.MOVING_TYPE, value)
     val prevBoundLocation: Location?
         get() = projectile.getMeta(MetaKeys.PREV_BOUND_LOCATION)
@@ -81,7 +81,7 @@ value class Ball(val projectile : Projectile) {
     val reusable: Boolean
         get() = BallConfig.getMove(movingType).reusable
     val nameForDrop: String
-        get() = if(reusable) movingType else BallConfig.defaultName
+        get() = if(reusable) movingType else BallConfig.getRepulsion(ballType).name
     companion object {
         fun launch(setting: LaunchSettings) : Ball{
             val (shooter, velocity, rPoint, ballType, hand, isPitching, ballName, spinVector, acceleration, random, tracker, trackerBlock, velocityModifier) = setting
@@ -188,6 +188,7 @@ value class Ball(val projectile : Projectile) {
             ballName = nameForDrop
         )).projectile
         bounced.setMeta(MetaKeys.BOUNCE_COUNT, bounceCount + 1)
+        removeMetaData()
         return bounced
     }
 
@@ -208,6 +209,7 @@ value class Ball(val projectile : Projectile) {
         Bukkit.getPluginManager().callEvent(
             BallBounceEvent(bounced, hitBlock, projectile, this.isInFlight)
         )
+        removeMetaData()
 
         return bounced
     }
@@ -234,12 +236,14 @@ value class Ball(val projectile : Projectile) {
         val bounceEvent = BallBounceEvent(bounced, hitBlock, projectile, this.isInFlight)
         Bukkit.getPluginManager().callEvent(bounceEvent)
         bounced.setMeta(MetaKeys.BOUNCE_COUNT, bounceCount + 1)
+        removeMetaData()
         return bounced
     }
 
     fun dropAsItem() : BallItem {
         val item = BallItem.generate(ballType, nameForDrop)
         projectile.world.dropItem(projectile.location, item.item)
+        removeMetaData()
         return item
     }
 
@@ -258,6 +262,15 @@ value class Ball(val projectile : Projectile) {
             ParticleConfig.spawnIfEnabled(ParticleType.HIT_TO_PLAYERS, player.location)
         }
         dropAsItem()
+    }
+
+    fun removeMetaData() {
+        projectile.removeMeta(MetaKeys.IS_IN_FLIGHT)
+        projectile.removeMeta(MetaKeys.BOUNCE_COUNT)
+        projectile.removeMeta(MetaKeys.SAME_PLACE_COUNT)
+        projectile.removeMeta(MetaKeys.PREV_BOUND_LOCATION)
+        projectile.removeMeta(MetaKeys.SPIN_VECTOR)
+        projectile.removeMeta(MetaKeys.MOVING_TYPE)
     }
 
 }
