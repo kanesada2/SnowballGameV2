@@ -19,11 +19,60 @@ The original version can be found at: https://github.com/kanesada2/SnowballGame/
 ### For Server Admins
 - A new configuration file called `bounce.yml` has been added, allowing you to configure which blocks give balls special bounce behavior. If you want to assign roles to blocks added in newer Minecraft versions, edit this file.
 - The five levels of ball repulsion when hit by a bat have existed for a while, but you can now configure the rebound coefficients for each level in the config.
+```yaml
+  # the settings of the balls which have different repulsion with being hit.
+  Repulsion_New:
+    Highest:
+      Coefficient: 1.4
+      Name: 'Ball'
+    Higher:
+      Coefficient: 1.2
+      Name: 'Ball'
+    Normal:
+      Coefficient: 1.0
+      Name: 'Ball'
+    Lower:
+      Coefficient: 0.8
+      Name: 'Ball'
+    Lowest:
+      Coefficient: 0.6
+      Name: 'Ball'
+```
 - A new `Reusable: True/False` setting has been added for pitch types. Balls with this set to true will retain their name even after bouncing, being caught by a glove, or being hit by a bat. I added this feature thinking it might be useful for sports other than baseball.
-- Glove catch range can now be configured.
-- Bat power and sweet spot distance can now be configured.
+```yaml
+    Reusable:
+      Velocity: 0.5
+      Vertical: 0.04
+      Reusable: true
+      Particle: BLOCK
+      Block: ICE
+```
+- Glove catch range (in blocks) can now be configured.
+```yaml
+    SIDE:
+      Vertical: -0.5
+      Horizontal: 0.3
+      Closeness: 0
+      CatchRange: 3
+``` 
+- Bat power, sweet spot distance, and hit range can now be configured.
+```yaml
+  # Length The length from your eye to the impact point.
+  # Range: The range (in blocks) within which the bat can hit a ball when swung.(This is the minimum range at full swing. Softer swings can reach farther.)
+  # Power: The swing strength of that bat. You can hit balls harder when you set bigger value.
+    UPPER:
+      Fly: 0.3
+      Length: 3.0
+      Range: 1.2
+      Power: 1.0
+```
 - For particle settings, you can now set a `Block` property to spawn particles associated with specific blocks. However, other data types like Color are not supported.
-
+```yaml
+  BattedBall_InFlight:
+    Enabled: false
+    Particle: BLOCK_MARKER
+    Block: BARRIER
+```
 ### For Developers
 - The entire plugin codebase has been completely rewritten, now in Kotlin. I think it's considerably better than the terrible code it used to be.
 - I've tried to keep the interface unchanged for `SnowballGameAPI` class methods and SnowballGame events. However, everything else has changed.

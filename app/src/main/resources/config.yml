@@ -90,7 +90,7 @@ Bat:
   Bat_Name: 'Bat'
   # You can change your swing by naming special name(set below) to your bat.
   # Fly: (-1~1) Bigger value means you can hit high-fly easily, and smaller means batted-ball tends to be grounder. Default value is 0.
-  # Length The length from your eye to the impact point.
+  # Length: The length from your eye to the impact point.
   # Range: The range (in blocks) within which the bat can hit a ball when swung.(This is the minimum range at full swing. Softer swings can reach farther.)
   # Power: The swing strength of that bat. You can hit balls harder when you set bigger value.
   Swing:
@@ -120,6 +120,7 @@ Glove:
     # Vertical: 0 means the height of your eye. positive value means above.
     # Horizontal: 0 means the position of your eye. positive value means your main-hand side..
     # Closeness: Increasing this value means you can pitch from closer to batter.
+    # CatchRange: The range (in blocks) within you can catch balls with the glove.
     SIDE:
       Vertical: -0.5
       Horizontal: 0.3
