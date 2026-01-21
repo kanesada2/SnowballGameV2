@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ可視化</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .upload-section {
+            margin-bottom: 20px;
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        #canvas {
+            border: 2px solid #333;
+            cursor: crosshair;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .legend-gradient {
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(to right, white, red);
+            border: 1px solid #333;
+            margin: 0 10px;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flight Distance on batted balls</h1>
+        
+        <div class="upload-section">
+            <input type="file" id="csvFile" accept=".csv" />
+            <div class="info">
+                CSVファイルを選択してください。形式: [横軸(80-250), 縦軸(-10-80), 赤さ(0~)]
+            </div>
+        </div>
+        
+        <canvas id="canvas" width="900" height="300"></canvas>
+        
+        <div class="legend">
+            <span>飛距離:</span>
+            <div class="legend-gradient"></div>
+            <span>弱 → 強</span>
+        </div>
+        
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('csvFile');
+        const statsDiv = document.getElementById('stats');
+        
+        // グラフの設定
+        const config = {
+            width: 900,
+            height: 300,
+            padding: 60,
+            xMin: 30,
+            xMax: 250,
+            yMin: -20,
+            yMax: 70,
+            backgroundColor: '#87CEEB', // 水色
+            pointSize: 5, // 点のサイズ（小さめに設定）
+            pointAlpha: 0.8 // 透明度（0-1）
+        };
+        
+        // 座標変換関数
+        function transformX(x) {
+            const graphWidth = config.width - 2 * config.padding;
+            return config.padding + ((x - config.xMin) / (config.xMax - config.xMin)) * graphWidth;
+        }
+        
+        function transformY(y) {
+            const graphHeight = config.height - 2 * config.padding;
+            return config.height - config.padding - ((y - config.yMin) / (config.yMax - config.yMin)) * graphHeight;
+        }
+        
+        // 背景とグリッドを描画
+        function drawBackground() {
+            // 背景色
+            ctx.fillStyle = config.backgroundColor;
+            ctx.fillRect(0, 0, config.width, config.height);
+            
+            // グラフ領域の枠
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                config.padding,
+                config.padding,
+                config.width - 2 * config.padding,
+                config.height - 2 * config.padding
+            );
+            
+            // グリッド線
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.5;
+            
+            // 縦のグリッド線
+            for (let x = 100; x <= 250; x += 25) {
+                const px = transformX(x);
+                ctx.beginPath();
+                ctx.moveTo(px, config.padding);
+                ctx.lineTo(px, config.height - config.padding);
+                ctx.stroke();
+            }
+            
+            // 横のグリッド線
+            for (let y = 0; y <= 80; y += 10) {
+                const py = transformY(y);
+                ctx.beginPath();
+                ctx.moveTo(config.padding, py);
+                ctx.lineTo(config.width - config.padding, py);
+                ctx.stroke();
+            }
+            
+            // 軸ラベル
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            // X軸ラベル
+            for (let x = 100; x <= 250; x += 50) {
+                const px = transformX(x);
+                ctx.fillText(x.toString(), px, config.height - config.padding + 25);
+            }
+            
+            // Y軸ラベル
+            ctx.textAlign = 'right';
+            for (let y = 0; y <= 80; y += 20) {
+                const py = transformY(y);
+                ctx.fillText(y.toString(), config.padding - 10, py + 5);
+            }
+            
+            // 軸タイトル
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Exit Velocity(km/h)', config.width / 2, config.height - 10);
+            
+            ctx.save();
+            ctx.translate(15, config.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Launch Angle(degrees)', 0, 0);
+            ctx.restore();
+        }
+        
+        // データポイントを描画
+        function drawPoint(x, y, intensity) {
+            const px = transformX(x);
+            const py = transformY(y);
+            
+            // 範囲外チェック
+            if (px < config.padding || px > config.width - config.padding ||
+                py < config.padding || py > config.height - config.padding) {
+                return;
+            }
+            
+            // 赤さの強度を0-1に正規化（最大値は自動調整）
+            const normalizedIntensity = Math.min(intensity / 100, 1);
+            
+            // 色の計算（白→赤）
+            const r = 255;
+            const g = Math.round(255 * (1 - normalizedIntensity));
+            const b = Math.round(255 * (1 - normalizedIntensity));
+            
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${config.pointAlpha})`;
+            ctx.beginPath();
+            ctx.fillRect(px, py, config.pointSize, config.pointSize)
+            //ctx.arc(px, py, config.pointSize, 0, Math.PI * 2);
+            //ctx.fill();
+        }
+        
+        // CSVデータを解析
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const data = [];
+            
+            // ヘッダー行をスキップするかチェック
+            let startIndex = 0;
+            const firstLine = lines[0].split(',');
+            if (isNaN(parseFloat(firstLine[0]))) {
+                startIndex = 1; // ヘッダーがある場合
+            }
+            
+            for (let i = startIndex; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => parseFloat(v.trim()));
+                if (values.length >= 3 && values.every(v => !isNaN(v))) {
+                    data.push({
+                        x: values[0],
+                        y: values[1],
+                        intensity: values[2]
+                    });
+                }
+            }
+            
+            return data;
+        }
+        
+        // データを描画
+        function visualizeData(data) {
+            drawBackground();
+            
+            // 統計情報の計算
+            const xValues = data.map(d => d.x);
+            const yValues = data.map(d => d.y);
+            const intensityValues = data.map(d => d.intensity);
+            
+            const stats = {
+                count: data.length,
+                xMin: Math.min(...xValues),
+                xMax: Math.max(...xValues),
+                yMin: Math.min(...yValues),
+                yMax: Math.max(...yValues),
+                intensityMin: Math.min(...intensityValues),
+                intensityMax: Math.max(...intensityValues)
+            };
+            
+            // データポイントを描画
+            data.forEach(point => {
+                drawPoint(point.x, point.y, point.intensity);
+            });
+            
+            // 統計情報を表示
+            statsDiv.innerHTML = `
+                <strong>データ統計:</strong><br>
+                データ点数: ${stats.count.toLocaleString()}件<br>
+                打球速度: ${stats.xMin.toFixed(2)} ~ ${stats.xMax.toFixed(2)}km/h<br>
+                角度: ${stats.yMin.toFixed(2)} ~ ${stats.yMax.toFixed(2)}°<br>
+                飛距離: ${stats.intensityMin.toFixed(2)} ~ ${stats.intensityMax.toFixed(2)}m
+            `;
+        }
+        
+        // ファイル読み込み
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const data = parseCSV(text);
+                
+                if (data.length === 0) {
+                    alert('有効なデータが見つかりませんでした。');
+                    return;
+                }
+                
+                visualizeData(data);
+            };
+            reader.readAsText(file);
+        });
+        
+        // 初期背景を描画
+        drawBackground();
+    </script>
+</body>
+</html>

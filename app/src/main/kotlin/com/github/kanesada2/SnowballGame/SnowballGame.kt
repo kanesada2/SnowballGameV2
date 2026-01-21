@@ -20,6 +20,9 @@ class SnowballGame : JavaPlugin() {
         NotifyDisabledHandler.init(this)
         NotifyDisabledHandler.loadNotifyDisabled()
         server.pluginManager.registerEvents(SnowballGameListener(), this)
+        // Uncomment to enable TESTER bat functionality
+        server.pluginManager.registerEvents(BattedBallRecorderListener(this), this)
+        server.pluginManager.registerEvents(TesterListener(), this)
         getCommand("SnowballGame")?.setExecutor(SnowballGameCommandExecutor())
         logger.info("SnowballGame is enabled!")
     }
