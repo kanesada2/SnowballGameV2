@@ -271,9 +271,9 @@ class SnowballGameListener: Listener {
     fun onSwing(e: PlayerSwingBatEvent){
         if(e.force > Constants.Misc.SWING_FORCE_THRESHOLD){
             MessageConfig.broadcast(MessageType.SWING, e.player.location, "PLAYER" to e.player.displayName)
+            e.player.world.playSound(e.center, Sound.ENTITY_PLAYER_ATTACK_SWEEP, e.force, 1.0f)
             ParticleConfig.spawnIfEnabled(ParticleType.SWING_BAT, e.center)
         }else {
-            e.player.world.playSound(e.center, Sound.ENTITY_PLAYER_ATTACK_SWEEP, e.force, 1.0f)
             MessageConfig.broadcast(MessageType.BUNT, e.player.location, "PLAYER" to e.player.displayName)
         }
     }

@@ -122,8 +122,7 @@ value class Fielder(override val player: Player) : CanSlide{
         // ベース上で捕球した場合は必ずしもメインハンドに持っている必要はない
         if(needsBall && !isBallHolder) return
         val standingOn = player.location.block
-        val below = player.location.block.getRelative(BlockFace.DOWN)
-        (Base.from(standingOn) ?: Base.from(below))?.let {
+        player.getNearbyEntities(0.5,0.5,0.5).filterIsInstance<ArmorStand>().firstNotNullOfOrNull(Base::from)?.let {
             val name = it.stand.customName ?: if(Umpire.from(it.stand) != null) UmpireConfig.name else BaseConfig.name
             MessageConfig.broadcast(MessageType.TOUCH_BASE, player.location, "PLAYER" to player.displayName, "BASE" to name)
         }
