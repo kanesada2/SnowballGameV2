@@ -258,16 +258,12 @@ class SnowballGameListener: Listener {
 
     @EventHandler
     fun onCatch(e: PlayerCatchBallEvent){
-        Fielder.from(e.player)?.let {fielder ->
+        Fielder.from(e.player)?.let {
             // ダイレクトキャッチ時
             ParticleConfig.spawnIfEnabled(ParticleType.CATCH_BALL, e.ball.location)
             if(e.isDirect) MessageConfig.broadcast(MessageType.CATCH, e.player.location, "PLAYER" to e.player.displayName)
             // ベースの上での捕球時（同時に発生して併殺もあるのでreturnしない）
-            val standingOn = e.player.location.block
-            val below = e.player.location.block.getRelative(BlockFace.DOWN)
-            (Base.from(standingOn) ?: Base.from(below))?.let {
-                fielder.appeal()
-            }
+            it.appeal(false) // イベントにより捕球が保障されているので、ボールをメインハンドに持っている必要はない
         }
     }
 

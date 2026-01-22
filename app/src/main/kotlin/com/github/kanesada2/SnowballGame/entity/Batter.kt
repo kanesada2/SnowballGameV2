@@ -142,7 +142,8 @@ value class Batter(override val player: Player): CanSlide {
         val toCenter = player.location.direction.normalize().multiply(batItem.length * lengthModifier)
         val center = player.eyeLocation.add(toCenter)
         val force = currentPower * batItem.power
-        val size = batItem.range + (1 - currentPower) * Constants.Batter.HIT_RANGE_MODIFIER * batItem.range
+        // パワー最強でrangeの1倍、最弱で1.5倍のサイズのミートカーソルになるように
+        val size = batItem.range * (1 + (1 - currentPower) * Constants.Batter.HIT_RANGE_MODIFIER)
         val range = Vector(1,1,1).multiply(size)
 
         val bat = Bat.spawn(center)

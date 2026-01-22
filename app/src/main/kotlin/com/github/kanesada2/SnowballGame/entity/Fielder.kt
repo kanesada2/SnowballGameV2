@@ -18,6 +18,7 @@ import com.github.kanesada2.SnowballGame.task.PlayerCoolDownTask
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.block.BlockFace
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
 import org.bukkit.entity.Snowball
@@ -117,14 +118,14 @@ value class Fielder(override val player: Player) : CanSlide{
         MessageConfig.broadcast(MessageType.TAG, player.location, "PLAYER" to player.displayName, "RUNNER" to runner.displayName)
     }
 
-    fun appeal(){
-        if(!isBallHolder) return
-        player.getNearbyEntities(0.5, 0.5, 0.5)
-            .filterIsInstance<ArmorStand>()
-            .firstNotNullOfOrNull { Base.from(it) }
-            ?.let {
-                val name = it.stand.customName ?: if(Umpire.from(it.stand) != null) UmpireConfig.name else BaseConfig.name
-                MessageConfig.broadcast(MessageType.TOUCH_BASE, player.location, "PLAYER" to player.displayName, "BASE" to name)
-            }
+    fun appeal(needsBall: Boolean = true) {
+        // ベース上で捕球した場合は必ずしもメインハンドに持っている必要はない
+        if(needsBall && !isBallHolder) return
+        val standingOn = player.location.block
+        val below = player.location.block.getRelative(BlockFace.DOWN)
+        (Base.from(standingOn) ?: Base.from(below))?.let {
+            val name = it.stand.customName ?: if(Umpire.from(it.stand) != null) UmpireConfig.name else BaseConfig.name
+            MessageConfig.broadcast(MessageType.TOUCH_BASE, player.location, "PLAYER" to player.displayName, "BASE" to name)
+        }
     }
 }
