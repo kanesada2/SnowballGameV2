@@ -27,6 +27,6 @@ value class UmpireItem(val item: ItemStack) : HasRecipe {
         }
     }
     override fun recipe(key: NamespacedKey): ShapelessRecipe {
-        return ShapelessRecipe(key, item).addIngredient(Material.QUARTZ_SLAB).addIngredient(Material.OBSERVER)
+        return ShapelessRecipe(key, item).addIngredient(Material.QUARTZ_BLOCK).addIngredient(Material.OBSERVER)
     }
 }

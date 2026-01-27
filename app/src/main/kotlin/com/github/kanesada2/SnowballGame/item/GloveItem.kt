@@ -3,6 +3,7 @@ package com.github.kanesada2.SnowballGame.item
 import com.github.kanesada2.SnowballGame.PersistentDataKeys
 import com.github.kanesada2.SnowballGame.config.GloveConfig
 import com.github.kanesada2.SnowballGame.extension.hasPdc
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ItemStack
@@ -17,14 +18,14 @@ value class GloveItem private constructor(val item: ItemStack) : HasRecipe {
         fun from(item: ItemStack): GloveItem? {
             return if (item.type == Material.LEATHER && item.hasPdc(PersistentDataKeys.Glove)) GloveItem(item) else null
         }
-        fun generate(name : String? = null): CoachItem {
+        fun generate(name : String? = null): GloveItem {
             val item = ItemStack(Material.LEATHER)
             val meta = item.itemMeta
             val actualName = name ?: GloveConfig.name
             meta?.setDisplayName(actualName)
             meta?.persistentDataContainer?.set(PersistentDataKeys.Glove, PersistentDataType.BOOLEAN, true)
             item.itemMeta = meta
-            return CoachItem(item)
+            return GloveItem(item)
         }
     }
 

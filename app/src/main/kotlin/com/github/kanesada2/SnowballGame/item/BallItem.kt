@@ -42,7 +42,7 @@ value class BallItem private constructor(val item: ItemStack): HasRecipe {
         return ShapedRecipe(key, item).apply {
             shape(
                 "LSL",
-                "LBL",
+                "SBS",
                 "LSL"
             )
             val inclusion = when(ballType){
